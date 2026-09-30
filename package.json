@@ -20,11 +20,11 @@
     "@axe-core/playwright": "^4.13.0",
     "@li0ard/sm2": "^0.1.0",
     "@playwright/test": "^1.62.1",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "playwright": "^1.62.1",
     "sm-crypto": "^0.5.7",
     "typescript": "~5.9.3",
-    "vite": "^8.2.2",
+    "vite": "^8.3.1",
     "vitest": "^4.1.10"
   }
 }
