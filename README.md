@@ -46,6 +46,18 @@ Run the published vectors, change the signing identity, cross the two ciphertext
 - **Malformed C1** — decryption rejects a point that is not on curveSM2 before deriving a shared point.
 - **Invalid private key** — SM2 excludes `d = n - 1` because `(1 + d)` would not be invertible modulo `n`.
 
+### OpenSSL deployment advisory — 29 September 2026
+
+The [OpenSSL advisory](https://openssl-library.org/news/secadv/20260929.txt) discloses three implementation side channels relevant to SM2:
+
+- **CVE-2026-54872:** generic EC scalar multiplication leaks nonce information through signing time on platforms using the generic SM2 path. The leak is small and requires many measurements; OpenSSL's dedicated NIST P-256, P-384 and P-521 paths are unaffected by this CVE.
+- **CVE-2026-54875:** optimized SM2 scalar multiplication on ARM64/AArch64 and RISC-V leaks through timing/cache access, involving the signing nonce or the decryption private scalar. It affects OpenSSL 4.0, 3.6, 3.5 and 3.4 on those platforms; 3.0, 1.1.1 and 1.0.2 are unaffected by this particular CVE.
+- **CVE-2026-77696:** variable-time arithmetic in SM2 signing leaks secret information across platforms. It affects OpenSSL 4.0, 3.6, 3.5, 3.4, 3.0 and 1.1.1; 1.0.2 is unaffected by this particular CVE.
+
+These are attack-model-conditional implementation vulnerabilities, not a break of curveSM2. Observable signing times may, over many signatures, enable lattice/HNP private-key recovery; the advisory does not establish universal practical exploitation. Affected deployments should follow its branch-specific upgrades: 4.0.3, 3.6.5, 3.5.9 or 3.4.8; older supported branches have separate premium-support fixes listed there. OpenSSL 3.1, 3.2 and 3.3 are out of support and were not analysed.
+
+This browser lab uses `@noble/curves` and JavaScript arithmetic, not OpenSSL. Its nonce-reuse demonstration does not measure timing/cache leakage or reproduce these CVEs; passing functional vectors does not establish constant-time execution.
+
 ## Real-World Usage
 
 RFC 8998 defines the informational ShangMi TLS 1.3 profile: `TLS_SM4_GCM_SM3` (`0x00C6`), `TLS_SM4_CCM_SM3` (`0x00C7`), `sm2sig_sm3` (`0x0708`), and `curveSM2` (group `41`). Its certificate-signature default ID is the ASCII string `1234567812345678`; other SM2 contexts can use different IDs and must agree on them.
