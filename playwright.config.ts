@@ -8,7 +8,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:4607/crypto-lab-sm2-forge/',
+    baseURL: 'http://localhost:4710/crypto-lab-sm2-forge/',
     colorScheme: 'dark',
   },
   projects: [
@@ -24,8 +24,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run build && npm run preview -- --port 4607 --strictPort',
-    url: 'http://localhost:4607/crypto-lab-sm2-forge/',
+    command: 'npm run build && npm run preview -- --port 4710 --strictPort',
+    url: 'http://localhost:4710/crypto-lab-sm2-forge/',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
