@@ -5,26 +5,27 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run test:maintenance && tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:a11y": "playwright test --project=a11y",
-    "test:e2e": "playwright test --project=claims"
+    "test:e2e": "playwright test --project=claims",
+    "test:maintenance": "node --test tests/maintenance-controls.node.mjs"
   },
   "dependencies": {
     "@li0ard/sm3": "^0.1.1",
     "@noble/curves": "^2.4.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
+    "@axe-core/playwright": "^4.14.0",
     "@li0ard/sm2": "^0.1.0",
-    "@playwright/test": "^1.64.0",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
     "playwright": "^1.62.1",
     "sm-crypto": "^0.5.7",
     "typescript": "~5.9.3",
     "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   }
 }
