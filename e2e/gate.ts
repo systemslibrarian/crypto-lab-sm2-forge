@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
 import { auditContrast, formatContrastFailures } from './contrast';
+import { auditControlNames, formatControlNameFailures } from './control-names';
 import { auditNonText, formatNonTextFailures } from './nontext';
 
 export const NARROW = { width: 380, height: 800 };
@@ -105,6 +106,11 @@ async function scan(page: Page, label: string): Promise<void> {
     ),
   );
   expect(hiddenContrast, `measured aria-hidden contrast failures in state: ${label}`).toEqual([]);
+
+  // axe's `label` rule accepts a bare `placeholder` as an accessible name, so a
+  // deleted label can leave this gate green. See `control-names.ts`.
+  const unnamed = formatControlNameFailures(await auditControlNames(page));
+  expect(unnamed, `form controls named only by placeholder/title in state: ${label}`).toEqual([]);
 
   expect(
     formatNonTextFailures(await auditNonText(page)),
