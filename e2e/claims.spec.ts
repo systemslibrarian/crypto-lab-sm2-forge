@@ -86,6 +86,24 @@ test('both ciphertext layouts succeed, but a cross-order decoder names the misma
   );
 });
 
+test('the plaintext comparison preserves a leading UTF-8 byte-order mark', async ({ page }) => {
+  await unlockCiphertext(page);
+  await page.locator('#encryption-message').fill('\uFEFFBook');
+  await page.getByRole('button', { name: 'Encrypt once' }).click();
+  await expect(page.locator('#order-verdict')).toHaveAttribute('data-state', 'pass');
+  await expect(page.locator('#roundtrip-c1c3c2')).toHaveAttribute('data-state', 'pass');
+  await expect(page.locator('#roundtrip-c1c2c3')).toHaveAttribute('data-state', 'pass');
+});
+
+test('an empty C2 has identical wire bytes in both classroom layouts', async ({ page }) => {
+  await unlockCiphertext(page);
+  await page.locator('#encryption-message').fill('');
+  await page.getByRole('button', { name: 'Encrypt once' }).click();
+  await page.getByLabel('Decoder expects').selectOption('C1C2C3');
+  await expect(page.locator('#order-verdict')).toHaveAttribute('data-state', 'pass');
+  await expect(page.locator('#order-verdict')).toContainText('identical wire bytes');
+});
+
 test('nonce-reuse fixture has two accepted signatures and an exposed key', async ({ page }) => {
   await unlockCiphertext(page);
   await page.getByRole('button', { name: 'Reuse k, sign twice, recover d' }).click();

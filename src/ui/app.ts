@@ -35,7 +35,6 @@ import {
 type VerdictKind = 'idle' | 'pass' | 'fail' | 'alarm';
 
 const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 function required<T extends Element>(root: ParentNode, selector: string): T {
   const element = root.querySelector<T>(selector);
@@ -261,7 +260,7 @@ const APP_MARKUP = `
           </div>
           <div class="verdict verdict-idle sticky-verdict" id="order-verdict" data-state="idle" role="status" aria-live="polite"><span class="verdict-icon" aria-hidden="true">○</span><span><strong>WAIT — </strong>Select a wire and decoder order.</span></div>
           <div class="sticky-failure" id="order-failure-log" role="log" aria-live="polite" hidden></div>
-          <p class="negative-claim" id="order-negative-claim">Both layouts protect the same plaintext when the decoder matches. The mismatch is an interoperability failure, not a weakness in the SM2 curve or encryption equations.</p>
+          <p class="negative-claim" id="order-negative-claim">Each layout carries the same three components. When C2 is empty, swapping C2 and C3 leaves the bytes unchanged. A decoder rejecting the wrong order is an interoperability failure, not a weakness in the SM2 curve or encryption equations.</p>
         </div>
       </section>
 
@@ -464,8 +463,12 @@ export function renderApp(root: HTMLElement): void {
     const result = decryptSm2(ANNEX_PRIVATE_KEY, transmitted, expected);
 
     if (result.ok) {
-      const exact = decoder.decode(result.plaintext) === activeEncryption.plaintextText;
-      setVerdict(orderVerdict, exact ? 'pass' : 'alarm', exact ? `Decoder accepted ${expected}; recovered plaintext matches byte-for-byte.` : 'Decoder returned different plaintext unexpectedly.');
+      const exact = equalBytes(result.plaintext, encoder.encode(activeEncryption.plaintextText));
+      const description = activeEncryption.result.c2.length === 0
+        ? 'The encrypted payload C2 is empty, so both orders produce identical wire bytes.'
+        : `Decoder accepted ${expected}.`;
+      setVerdict(orderVerdict, exact ? 'pass' : 'alarm',
+        exact ? `${description} The plaintext matches byte-for-byte.` : 'Decoder returned different plaintext bytes.');
       return;
     }
 
@@ -499,7 +502,12 @@ export function renderApp(root: HTMLElement): void {
     for (const order of ['C1C3C2', 'C1C2C3'] as const) {
       const roundTrip = decryptSm2(ANNEX_PRIVATE_KEY, serializeCiphertext(result, order), order);
       const verdict = required<HTMLElement>(root, order === 'C1C3C2' ? '#roundtrip-c1c3c2' : '#roundtrip-c1c2c3');
-      setVerdict(verdict, roundTrip.ok ? 'pass' : 'fail', roundTrip.ok ? 'Matching decoder round-trips.' : roundTrip.reason);
+      if (!roundTrip.ok) {
+        setVerdict(verdict, 'fail', roundTrip.reason);
+      } else {
+        const matches = equalBytes(roundTrip.plaintext, plaintext);
+        setVerdict(verdict, matches ? 'pass' : 'fail', matches ? 'Matching decoder round-trips exactly.' : 'Decoded bytes differ from the input.');
+      }
     }
 
     encryptionRetired.hidden = true;
